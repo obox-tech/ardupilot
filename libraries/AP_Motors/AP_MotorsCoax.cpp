@@ -20,6 +20,27 @@
 
 extern const AP_HAL::HAL& hal;
 
+/*
+// parameters for the tilthead coax class
+const AP_Param::GroupInfo AP_MotorsCoax::var_coax_info[] = {
+
+    // @Param: ROLL_FACTOR
+    // @DisplayName: xx
+    // @Description: xx
+    // @Range: 0.0 1.0
+    // @User: Advanced
+    AP_GROUPINFO("ROLL_FACTOR", 1, AP_MotorsCoax, _roll_factor, AP_MOTORS_COAX_ROLL_FACTOR),
+
+    // @Param: PITCH_FACTOR
+    // @DisplayName: xx
+    // @Description: xx
+    // @Range: 0.0 1.0
+    // @User: Advanced
+    AP_GROUPINFO("PITCH_FACTOR", 2, AP_MotorsCoax, _pitch_factor, AP_MOTORS_COAX_PITCH_FACTOR),
+
+    AP_GROUPEND
+};*/
+
 // init
 void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_type)
 {
@@ -38,6 +59,9 @@ void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_t
     }
 
     _mav_type = MAV_TYPE_COAXIAL;
+
+    _roll_factor    = AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT;
+    _pitch_factor   = AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT;
 
     // record successful initialisation if what we setup was the desired frame_class
     set_initialised_ok(frame_class == MOTOR_FRAME_COAX);
@@ -66,10 +90,9 @@ void AP_MotorsCoax::output_to_motors()
     switch (_spool_state) {
         case SpoolState::SHUT_DOWN:
             // sends minimum values out to the motors
-            rc_write_angle(AP_MOTORS_MOT_1, _roll_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_2, _pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_3, -_roll_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_4, -_pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_1, (_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_2, (-_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+           
             rc_write(AP_MOTORS_MOT_5, output_to_pwm(0));
             rc_write(AP_MOTORS_MOT_6, output_to_pwm(0));
             break;
@@ -186,8 +209,10 @@ void AP_MotorsCoax::output_armed_stabilizing()
         limit.yaw = true;
     }
 
+    // scale the thrust to match steady state rotor speed ratio  = w_upper (CCW) / w_lower (CW) = 0.9
+    // thrust_upper / thrust_lower = (w_upper / w_lower)^2 = 0.9^2 = 0.81
     _thrust_yt_ccw = thrust_out + 0.5f * yaw_thrust;
-    _thrust_yt_cw = thrust_out - 0.5f * yaw_thrust;
+    _thrust_yt_cw  = 0.9f * thrust_out - 0.5f * yaw_thrust;
 
     // limit thrust out for calculation of actuator gains
     float thrust_out_actuator = constrain_float(MAX(_throttle_hover * 0.5f, thrust_out), 0.5f, 1.0f);
@@ -200,18 +225,24 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // static thrust is proportional to the airflow velocity squared
     // therefore the torque of the roll and pitch actuators should be approximately proportional to
     // the angle of attack multiplied by the static thrust.
-    _actuator_out[0] = roll_thrust / thrust_out_actuator;
-    _actuator_out[1] = pitch_thrust / thrust_out_actuator;
-    if (fabsf(_actuator_out[0]) > 1.0f) {
+    float roll_thrust_scaled  = roll_thrust / thrust_out_actuator;  
+    float pitch_thrust_scaled = pitch_thrust / thrust_out_actuator;
+
+    if (fabsf(roll_thrust_scaled) > 1.0f) {
         limit.roll = true;
-        _actuator_out[0] = constrain_float(_actuator_out[0], -1.0f, 1.0f);
+        roll_thrust_scaled = constrain_float(roll_thrust_scaled, -1.0f, 1.0f);
     }
-    if (fabsf(_actuator_out[1]) > 1.0f) {
+    if (fabsf(pitch_thrust_scaled) > 1.0f) {
         limit.pitch = true;
-        _actuator_out[1] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
+        pitch_thrust_scaled = constrain_float(pitch_thrust_scaled, -1.0f, 1.0f);
     }
-    _actuator_out[2] = -_actuator_out[0];
-    _actuator_out[3] = -_actuator_out[1];
+
+    // mix for the used tilting head set-up
+    _actuator_out[0] =  _pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
+    _actuator_out[1] =  -_pitch_factor*pitch_thrust_scaled  -_roll_factor*roll_thrust_scaled; 
+
+    _actuator_out[2] = 0.0f;
+    _actuator_out[3] = 0.0f;
 }
 
 // output_test_seq - spin a motor at the pwm value specified

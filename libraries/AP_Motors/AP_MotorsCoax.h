@@ -11,6 +11,10 @@
 #define AP_MOTORS_COAX_POSITIVE      1
 #define AP_MOTORS_COAX_NEGATIVE     -1
 
+// inverse roll pitch level arms
+#define AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT     0.433f  // motor mixing roll factor  130/300
+#define AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT    0.567f  // motor mixing pitch factor 170/300
+
 #define NUM_ACTUATORS 4
 
 #define AP_MOTORS_SINGLE_SPEED_DIGITAL_SERVOS 250 // update rate for digital servos
@@ -44,6 +48,8 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     uint16_t            get_motor_mask() override;
 
+    //static const struct AP_Param::GroupInfo        var_coax_info[];
+
 protected:
     // output - sends commands to the motors
     void                output_armed_stabilizing() override;
@@ -52,10 +58,14 @@ protected:
     float               _thrust_yt_ccw;
     float               _thrust_yt_cw;
 
-    const char* _get_frame_string() const override { return "COAX"; }
+    const char* _get_frame_string() const override { return "TILTCOAX"; }
 
     // output_test_seq - spin a motor at the pwm value specified
     //  motor_seq is the motor's sequence number from 1 to the number of motors on the frame
     //  pwm value is an actual pwm value that will be output, normally in the range of 1000 ~ 2000
     virtual void _output_test_seq(uint8_t motor_seq, int16_t pwm) override;
+
+    // roll/pitch factor, TODO set using user defined parameter
+    float            _roll_factor; 
+    float            _pitch_factor;
 };
