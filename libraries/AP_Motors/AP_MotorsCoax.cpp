@@ -90,8 +90,8 @@ void AP_MotorsCoax::output_to_motors()
     switch (_spool_state) {
         case SpoolState::SHUT_DOWN:
             // sends minimum values out to the motors
-            rc_write_angle(AP_MOTORS_MOT_1, (_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_2, (-_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_1, (-_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_2, (_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
            
             rc_write(AP_MOTORS_MOT_5, output_to_pwm(0));
             rc_write(AP_MOTORS_MOT_6, output_to_pwm(0));
@@ -238,8 +238,8 @@ void AP_MotorsCoax::output_armed_stabilizing()
     }
 
     // mix for the used tilting head set-up
-    _actuator_out[0] =  _pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
-    _actuator_out[1] =  -_pitch_factor*pitch_thrust_scaled  -_roll_factor*roll_thrust_scaled; 
+    _actuator_out[0] =  -_pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
+    _actuator_out[1] =  _pitch_factor*pitch_thrust_scaled  -_roll_factor*roll_thrust_scaled; 
 
     _actuator_out[2] = 0.0f;
     _actuator_out[3] = 0.0f;
