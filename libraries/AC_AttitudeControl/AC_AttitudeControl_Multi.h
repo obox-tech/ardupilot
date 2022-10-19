@@ -37,6 +37,10 @@
 #ifndef AC_ATC_MULTI_RATE_YAW_FILT_HZ
  # define AC_ATC_MULTI_RATE_YAW_FILT_HZ     2.5f
 #endif
+// gyroscopic /cross coupling) gain
+#ifndef AC_ATTITUDE_CONTROL_RAT_GYRO_P
+ #define AC_ATTITUDE_CONTROL_RAT_GYRO_P     0.0f 
+#endif
 
 
 class AC_AttitudeControl_Multi : public AC_AttitudeControl {
@@ -103,4 +107,5 @@ protected:
 
     // angle_p/pd boost multiplier
     AP_Float              _throttle_gain_boost;
+    AP_Float              _rat_gyro_P;    // gyroscopic precession compensation gain
 };
