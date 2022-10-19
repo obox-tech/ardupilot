@@ -232,6 +232,14 @@ const AP_Param::GroupInfo AC_AttitudeControl_Multi::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("THR_MIX_MAN", 6, AC_AttitudeControl_Multi, _thr_mix_man, AC_ATTITUDE_CONTROL_MAN_DEFAULT),
 
+    // @Param: RAT_GYRO_P
+    // @DisplayName: Gyro Comp gain
+    // @Description: Sets an upper limit on the slew rate produced by the combined P and D gains. If the amplitude of the control action produced by the rate feedback exceeds this value, then the D+P gain is reduced to respect the limit. This limits the amplitude of high frequency oscillations caused by an excessive gain. The limit should be set to no more than 25% of the actuators maximum slew rate to allow for load effects. Note: The gain will not be reduced to less than 10% of the nominal value. A value of zero will disable this feature.
+    // @Range: 0 200
+    // @Increment: 0.5
+    // @User: Advanced
+    AP_GROUPINFO("RAT_GYRO_P", 7, AC_AttitudeControl_Multi, _rat_gyro_P, AC_ATTITUDE_CONTROL_RAT_GYRO_P),
+
     AP_GROUPEND
 };
 
@@ -336,10 +344,12 @@ void AC_AttitudeControl_Multi::rate_controller_run()
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
 
     _motors.set_roll(get_rate_roll_pid().update_all(_ang_vel_body.x, gyro_latest.x, _motors.limit.roll) + _actuator_sysid.x);
-    _motors.set_roll_ff(get_rate_roll_pid().get_ff());
+    //_motors.set_roll_ff(get_rate_roll_pid().get_ff());
+    _motors.set_roll_ff(-_rat_gyro_P*gyro_latest.y);
 
     _motors.set_pitch(get_rate_pitch_pid().update_all(_ang_vel_body.y, gyro_latest.y, _motors.limit.pitch) + _actuator_sysid.y);
-    _motors.set_pitch_ff(get_rate_pitch_pid().get_ff());
+    //_motors.set_pitch_ff(get_rate_pitch_pid().get_ff());
+    _motors.set_pitch_ff(_rat_gyro_P*gyro_latest.x);
 
     _motors.set_yaw(get_rate_yaw_pid().update_all(_ang_vel_body.z, gyro_latest.z, _motors.limit.yaw) + _actuator_sysid.z);
     _motors.set_yaw_ff(get_rate_yaw_pid().get_ff()*_feedforward_scalar);
