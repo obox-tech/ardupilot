@@ -178,6 +178,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if LOGGING_ENABLED == ENABLED
     SCHED_TASK(ten_hz_logging_loop,   10,    350, 114),
     SCHED_TASK(twentyfive_hz_logging, 25,    110, 117),
+    SCHED_TASK(onehundred_hz_logging_loop, 100,    75, 118),
     SCHED_TASK_CLASS(AP_Logger,            &copter.logger,              periodic_tasks, 400, 300, 120),
 #endif
     SCHED_TASK_CLASS(AP_InertialSensor,    &copter.ins,                 periodic,       400,  50, 123),
@@ -516,6 +517,16 @@ void Copter::fourhundred_hz_logging()
     }
 }
 
+
+// onehundred_hz_logging_loop
+// added to log fast RCOUT data
+void Copter::onehundred_hz_logging_loop()
+{
+    if (should_log(MASK_LOG_RCOUT)) {
+        logger.Write_RCOUT();
+    }
+}
+
 // ten_hz_logging_loop
 // should be run at 10hz
 void Copter::ten_hz_logging_loop()
@@ -536,9 +547,6 @@ void Copter::ten_hz_logging_loop()
         if (rssi.enabled()) {
             logger.Write_RSSI();
         }
-    }
-    if (should_log(MASK_LOG_RCOUT)) {
-        logger.Write_RCOUT();
     }
     if (should_log(MASK_LOG_NTUN) && (flightmode->requires_GPS() || landing_with_GPS() || !flightmode->has_manual_throttle())) {
         pos_control->write_log();
