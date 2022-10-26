@@ -20,9 +20,9 @@
 
 extern const AP_HAL::HAL& hal;
 
-/*
+
 // parameters for the tilthead coax class
-const AP_Param::GroupInfo AP_MotorsCoax::var_coax_info[] = {
+const AP_Param::GroupInfo AP_MotorsCoax::var_info[] = {
 
     // @Param: ROLL_FACTOR
     // @DisplayName: xx
@@ -38,8 +38,15 @@ const AP_Param::GroupInfo AP_MotorsCoax::var_coax_info[] = {
     // @User: Advanced
     AP_GROUPINFO("PITCH_FACTOR", 2, AP_MotorsCoax, _pitch_factor, AP_MOTORS_COAX_PITCH_FACTOR),
 
+    // @Param: ROT_RATIO
+    // @DisplayName: 
+    // @Description: Lower/Upper rotor throttle output mixing
+    // @Range: 0.0 1.0
+    // @User: Advanced
+    AP_GROUPINFO("ROT_RATIO", 3, AP_MotorsCoax, _rot_ratio, AP_MOTOR_COAX_ROT_RATIO),
+
     AP_GROUPEND
-};*/
+};
 
 // init
 void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_type)
@@ -60,10 +67,9 @@ void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_t
 
     _mav_type = MAV_TYPE_COAXIAL;
 
-    _roll_factor    = AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT;
-    _pitch_factor   = AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT;
-
-    _rot_ratio      = AP_MOTOR_COAX_ROT_RATIO_DEFAULT;
+    //_roll_factor    = AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT;
+    //_pitch_factor   = AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT;
+    //_rot_ratio      = AP_MOTOR_COAX_ROT_RATIO;
 
     // record successful initialisation if what we setup was the desired frame_class
     set_initialised_ok(frame_class == MOTOR_FRAME_COAX);

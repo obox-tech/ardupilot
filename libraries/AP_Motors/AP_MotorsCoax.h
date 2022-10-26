@@ -12,10 +12,10 @@
 #define AP_MOTORS_COAX_NEGATIVE     -1
 
 // inverse roll pitch level arms
-#define AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT     0.433f  // motor mixing roll factor  130/300
-#define AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT    0.567f  // motor mixing pitch factor 170/300
+#define AP_MOTORS_COAX_ROLL_FACTOR     0.433f  // motor mixing roll factor  130/300
+#define AP_MOTORS_COAX_PITCH_FACTOR    0.567f  // motor mixing pitch factor 170/300
 
-#define AP_MOTOR_COAX_ROT_RATIO_DEFAULT      0.97f    // throttle output ratio 
+#define AP_MOTOR_COAX_ROT_RATIO      0.97f    // throttle output ratio 
 
 #define NUM_ACTUATORS 4
 
@@ -32,6 +32,7 @@ public:
     AP_MotorsCoax(uint16_t loop_rate, uint16_t speed_hz = AP_MOTORS_SPEED_DEFAULT) :
         AP_MotorsMulticopter(loop_rate, speed_hz)
     {
+        AP_Param::setup_object_defaults(this, var_info);
     };
 
     // init
@@ -50,7 +51,8 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     uint16_t            get_motor_mask() override;
 
-    //static const struct AP_Param::GroupInfo        var_coax_info[];
+    // var_info for holding Parameter information
+    static const struct AP_Param::GroupInfo var_info[];
 
 protected:
     // output - sends commands to the motors
@@ -68,7 +70,7 @@ protected:
     virtual void _output_test_seq(uint8_t motor_seq, int16_t pwm) override;
 
     // roll/pitch factor, TODO set using user defined parameter
-    float           _roll_factor; 
-    float           _pitch_factor;
-    float           _rot_ratio;
+    AP_Float        _roll_factor; 
+    AP_Float        _pitch_factor;
+    AP_Float        _rot_ratio;
 };
