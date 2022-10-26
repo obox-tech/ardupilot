@@ -15,6 +15,8 @@
 #define AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT     0.433f  // motor mixing roll factor  130/300
 #define AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT    0.567f  // motor mixing pitch factor 170/300
 
+#define AP_MOTOR_COAX_ROT_RATIO_DEFAULT      0.97f    // throttle output ratio 
+
 #define NUM_ACTUATORS 4
 
 #define AP_MOTORS_SINGLE_SPEED_DIGITAL_SERVOS 250 // update rate for digital servos
@@ -69,6 +71,7 @@ protected:
     virtual void _output_test_seq(uint8_t motor_seq, int16_t pwm) override;
 
     // roll/pitch factor, TODO set using user defined parameter
-    float            _roll_factor; 
-    float            _pitch_factor;
+    float           _roll_factor; 
+    float           _pitch_factor;
+    float           _rot_ratio;
 };
