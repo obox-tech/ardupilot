@@ -20,10 +20,9 @@
 
 extern const AP_HAL::HAL& hal;
 
-
+/*
 // parameters for the tilthead coax class
 const AP_Param::GroupInfo AP_MotorsCoax::var_info[] = {
-
     // @Param: ROLL_FACTOR
     // @DisplayName: xx
     // @Description: xx
@@ -43,10 +42,11 @@ const AP_Param::GroupInfo AP_MotorsCoax::var_info[] = {
     // @Description: Lower/Upper rotor throttle output mixing
     // @Range: 0.0 1.0
     // @User: Advanced
-    AP_GROUPINFO("ROT_RATIO", 3, AP_MotorsCoax, _rot_ratio, AP_MOTOR_COAX_ROT_RATIO),
+    AP_GROUPINFO("ROTOR_RATIO", 3, AP_MotorsCoax, _rotor_ratio, AP_MOTOR_COAX_ROT_RATIO),
 
     AP_GROUPEND
 };
+*/
 
 // init
 void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_type)
@@ -67,9 +67,8 @@ void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_t
 
     _mav_type = MAV_TYPE_COAXIAL;
 
-    //_roll_factor    = AP_MOTORS_COAX_ROLL_FACTOR_DEFAULT;
-    //_pitch_factor   = AP_MOTORS_COAX_PITCH_FACTOR_DEFAULT;
-    //_rot_ratio      = AP_MOTOR_COAX_ROT_RATIO;
+    _roll_factor    = AP_MOTORS_COAX_ROLL_FACTOR;
+    _pitch_factor   = AP_MOTORS_COAX_PITCH_FACTOR;
 
     // record successful initialisation if what we setup was the desired frame_class
     set_initialised_ok(frame_class == MOTOR_FRAME_COAX);
@@ -98,8 +97,15 @@ void AP_MotorsCoax::output_to_motors()
     switch (_spool_state) {
         case SpoolState::SHUT_DOWN:
             // sends minimum values out to the motors
-            rc_write_angle(AP_MOTORS_MOT_1, (-_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_2, (_pitch_factor * _pitch_radio_passthrough - _roll_factor * _roll_radio_passthrough) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            float rll_out;
+            float pit_out;
+
+            // the cross coupling is here to show the effects when vehicle on ground
+            rll_out = _roll_radio_passthrough  + _rp_motmix * _pitch_radio_passthrough;
+            pit_out = _pitch_radio_passthrough + _rp_motmix * _roll_radio_passthrough;
+
+            rc_write_angle(AP_MOTORS_MOT_1, (-_pitch_factor * pit_out - _roll_factor * rll_out) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_2, ( _pitch_factor * pit_out - _roll_factor * rll_out) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
            
             rc_write(AP_MOTORS_MOT_5, output_to_pwm(0));
             rc_write(AP_MOTORS_MOT_6, output_to_pwm(0));
@@ -219,7 +225,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // scale the thrust to match steady state rotor speed ratio  = w_upper (CCW) / w_lower (CW) = 0.9
     // thrust_upper / thrust_lower = (w_upper / w_lower)^2 = 0.9^2 = 0.81
     _thrust_yt_ccw = thrust_out + 0.5f * yaw_thrust;
-    _thrust_yt_cw  = _rot_ratio * thrust_out - 0.5f * yaw_thrust;
+    _thrust_yt_cw  = _rotor_ratio * thrust_out - 0.5f * yaw_thrust;
 
     // limit thrust out for calculation of actuator gains
     float thrust_out_actuator = constrain_float(MAX(_throttle_hover * 0.5f, thrust_out), 0.5f, 1.0f);
@@ -232,8 +238,10 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // static thrust is proportional to the airflow velocity squared
     // therefore the torque of the roll and pitch actuators should be approximately proportional to
     // the angle of attack multiplied by the static thrust.
-    float roll_thrust_scaled  = roll_thrust / thrust_out_actuator;  
-    float pitch_thrust_scaled = pitch_thrust / thrust_out_actuator;
+    // Mixing is due to gyroscopic precession effect. _rp_motmix usually << 1.
+    // TODO scale cross couling gain using difference in rotor throttle (~ yaw controller output)
+    float roll_thrust_scaled  = (roll_thrust  + _rp_motmix*pitch_thrust) / thrust_out_actuator;  
+    float pitch_thrust_scaled = (pitch_thrust + _rp_motmix*roll_thrust)  / thrust_out_actuator;
 
     if (fabsf(roll_thrust_scaled) > 1.0f) {
         limit.roll = true;
@@ -246,7 +254,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
 
     // mix for the used tilting head set-up
     _actuator_out[0] =  -_pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
-    _actuator_out[1] =  _pitch_factor*pitch_thrust_scaled  -_roll_factor*roll_thrust_scaled; 
+    _actuator_out[1] =   _pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled; 
 
     _actuator_out[2] = 0.0f;
     _actuator_out[3] = 0.0f;

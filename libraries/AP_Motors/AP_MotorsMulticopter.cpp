@@ -208,6 +208,24 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("SAFE_TIME", 42, AP_MotorsMulticopter, _safe_time, AP_MOTORS_SAFE_TIME_DEFAULT),
 
+    // @Param: ROTOR_RATIO
+    // @DisplayName: Throttle output ratio (lower/upper) for coaxial frame
+    // @Description: Throttle output ratio (lower/upper) for coaxial frame
+    // @Range: 0 1
+    // @Units: 
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("ROTOR_RATIO", 43, AP_MotorsMulticopter, _rotor_ratio, AP_MOTORS_ROTOR_RATIO_DEFAULT),
+
+    // @Param: RP_MOTMIX
+    // @DisplayName: Roll/Pitch cross coupling in output/motor mixer
+    // @Description: Roll/Pitch cross coupling in output/motor mixer
+    // @Range: 0 1
+    // @Units: 
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("RP_MOTMIX", 44, AP_MotorsMulticopter, _rp_motmix, 0),
+
     AP_GROUPEND
 };
 

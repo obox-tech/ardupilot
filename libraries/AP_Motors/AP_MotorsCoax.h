@@ -12,10 +12,8 @@
 #define AP_MOTORS_COAX_NEGATIVE     -1
 
 // inverse roll pitch level arms
-#define AP_MOTORS_COAX_ROLL_FACTOR     0.433f  // motor mixing roll factor  130/300
-#define AP_MOTORS_COAX_PITCH_FACTOR    0.567f  // motor mixing pitch factor 170/300
-
-#define AP_MOTOR_COAX_ROT_RATIO      0.97f    // throttle output ratio 
+#define AP_MOTORS_COAX_ROLL_FACTOR      0.433f  // motor mixing roll factor  130/300
+#define AP_MOTORS_COAX_PITCH_FACTOR     0.567f  // motor mixing pitch factor 170/300
 
 #define NUM_ACTUATORS 4
 
@@ -32,7 +30,7 @@ public:
     AP_MotorsCoax(uint16_t loop_rate, uint16_t speed_hz = AP_MOTORS_SPEED_DEFAULT) :
         AP_MotorsMulticopter(loop_rate, speed_hz)
     {
-        AP_Param::setup_object_defaults(this, var_info);
+        //AP_Param::setup_object_defaults(this, var_info);
     };
 
     // init
@@ -55,7 +53,7 @@ public:
     bool arming_checks(size_t buflen, char *buffer) const override { return AP_Motors::arming_checks(buflen, buffer); }
 
     // var_info for holding Parameter information
-    static const struct AP_Param::GroupInfo var_info[];
+    //static const struct AP_Param::GroupInfo var_info[];
 
 protected:
     // output - sends commands to the motors
@@ -65,7 +63,7 @@ protected:
     float               _thrust_yt_ccw;
     float               _thrust_yt_cw;
 
-    const char* _get_frame_string() const override { return "TILTCOAX"; }
+    const char* _get_frame_string() const override { return "TILTCOAX :-)"; }
 
     // output_test_seq - spin a motor at the pwm value specified
     //  motor_seq is the motor's sequence number from 1 to the number of motors on the frame
@@ -75,5 +73,4 @@ protected:
     // roll/pitch factor, TODO set using user defined parameter
     AP_Float        _roll_factor; 
     AP_Float        _pitch_factor;
-    AP_Float        _rot_ratio;
 };
