@@ -20,34 +20,6 @@
 
 extern const AP_HAL::HAL& hal;
 
-/*
-// parameters for the tilthead coax class
-const AP_Param::GroupInfo AP_MotorsCoax::var_info[] = {
-    // @Param: ROLL_FACTOR
-    // @DisplayName: xx
-    // @Description: xx
-    // @Range: 0.0 1.0
-    // @User: Advanced
-    AP_GROUPINFO("ROLL_FACTOR", 1, AP_MotorsCoax, _roll_factor, AP_MOTORS_COAX_ROLL_FACTOR),
-
-    // @Param: PITCH_FACTOR
-    // @DisplayName: xx
-    // @Description: xx
-    // @Range: 0.0 1.0
-    // @User: Advanced
-    AP_GROUPINFO("PITCH_FACTOR", 2, AP_MotorsCoax, _pitch_factor, AP_MOTORS_COAX_PITCH_FACTOR),
-
-    // @Param: ROT_RATIO
-    // @DisplayName: 
-    // @Description: Lower/Upper rotor throttle output mixing
-    // @Range: 0.0 1.0
-    // @User: Advanced
-    AP_GROUPINFO("ROTOR_RATIO", 3, AP_MotorsCoax, _rotor_ratio, AP_MOTOR_COAX_ROT_RATIO),
-
-    AP_GROUPEND
-};
-*/
-
 // init
 void AP_MotorsCoax::init(motor_frame_class frame_class, motor_frame_type frame_type)
 {
@@ -103,7 +75,6 @@ void AP_MotorsCoax::output_to_motors()
             // the cross coupling is here to show the effects when vehicle on ground
             rll_out = _roll_radio_passthrough  + _rp_motmix * _pitch_radio_passthrough;
             pit_out = _pitch_radio_passthrough + _rp_motmix * _roll_radio_passthrough;
-
             rc_write_angle(AP_MOTORS_MOT_1, (-_pitch_factor * pit_out - _roll_factor * rll_out) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
             rc_write_angle(AP_MOTORS_MOT_2, ( _pitch_factor * pit_out - _roll_factor * rll_out) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
            
@@ -239,7 +210,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // therefore the torque of the roll and pitch actuators should be approximately proportional to
     // the angle of attack multiplied by the static thrust.
     // Mixing is due to gyroscopic precession effect. _rp_motmix usually << 1.
-    // TODO scale cross couling gain using difference in rotor throttle (~ yaw controller output)
+    // TODO scale cross coupling gain using difference in rotor throttle (~ yaw controller output)
     float roll_thrust_scaled  = (roll_thrust  + _rp_motmix*pitch_thrust) / thrust_out_actuator;  
     float pitch_thrust_scaled = (pitch_thrust + _rp_motmix*roll_thrust)  / thrust_out_actuator;
 
@@ -253,8 +224,17 @@ void AP_MotorsCoax::output_armed_stabilizing()
     }
 
     // mix for the used tilting head set-up
-    _actuator_out[0] =  -_pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
-    _actuator_out[1] =   _pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled; 
+    float servo_left = -_pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
+    float servo_right = _pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
+
+    // TODO: limit output, idea:
+    // if total servo_output <= 1: do not limit either roll or pitch because the weighted sum still fits in servo_l/r
+    // if total servo output > 1:
+    //      check what input dof can be limited most easily s.t. servo_left/right is again < 1
+    //      watch out when limiting roll/pitch to 1 from large non-zero output
+
+    _actuator_out[0] =  servo_left;
+    _actuator_out[1] =  servo_right;
 
     _actuator_out[2] = 0.0f;
     _actuator_out[3] = 0.0f;
