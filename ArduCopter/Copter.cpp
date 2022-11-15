@@ -176,9 +176,9 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK_CLASS(AP_Camera,            &copter.camera,              update,          50,  75, 111),
 #endif
 #if LOGGING_ENABLED == ENABLED
-    SCHED_TASK(ten_hz_logging_loop,   10,    350, 114),
-    SCHED_TASK(twentyfive_hz_logging, 25,    110, 117),
-    SCHED_TASK(onehundred_hz_logging_loop, 100,    75, 118),
+    SCHED_TASK(ten_hz_logging_loop,         10,    350,     114),
+    SCHED_TASK(twentyfive_hz_logging,       25,    110,     117),
+    SCHED_TASK(onehundred_hz_logging_loop, 100,    75,      118),
     SCHED_TASK_CLASS(AP_Logger,            &copter.logger,              periodic_tasks, 400, 300, 120),
 #endif
     SCHED_TASK_CLASS(AP_InertialSensor,    &copter.ins,                 periodic,       400,  50, 123),
@@ -522,8 +522,13 @@ void Copter::fourhundred_hz_logging()
 // added to log fast RCOUT data
 void Copter::onehundred_hz_logging_loop()
 {
+    // log outputs at high rate to understand output mixing and build servo model (SRV/ESC telem is available at 100Hz)
     if (should_log(MASK_LOG_RCOUT)) {
         logger.Write_RCOUT();
+    }
+
+    if (should_log(MASK_LOG_MOTBATT)) {
+        motors->Log_Write();
     }
 }
 
@@ -538,9 +543,6 @@ void Copter::ten_hz_logging_loop()
     // log EKF attitude data
     if (should_log(MASK_LOG_ATTITUDE_MED) || should_log(MASK_LOG_ATTITUDE_FAST)) {
         Log_Write_EKF_POS();
-    }
-    if (should_log(MASK_LOG_MOTBATT)) {
-        motors->Log_Write();
     }
     if (should_log(MASK_LOG_RCIN)) {
         logger.Write_RCIN();
