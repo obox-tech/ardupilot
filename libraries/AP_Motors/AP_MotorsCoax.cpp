@@ -135,7 +135,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     float   rp_scale = 1.0f;           // this is used to scale the roll, pitch and yaw to fit within the motor limits
 
     // apply voltage and air pressure compensation
-    const float compensation_gain = get_compensation_gain();
+    const float compensation_gain = get_compensation_gain(); // equals 1 as long as bat comp is disabled
     roll_thrust = (_roll_in + _roll_in_ff) * compensation_gain;
     pitch_thrust = (_pitch_in + _pitch_in_ff) * compensation_gain;
     yaw_thrust = (_yaw_in + _yaw_in_ff) * compensation_gain;
@@ -211,7 +211,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // the angle of attack multiplied by the static thrust.
     // Mixing is due to gyroscopic precession effect. _rp_motmix usually << 1.
     // TODO scale cross coupling gain using difference in rotor throttle (~ yaw controller output)
-    float roll_thrust_scaled  = (roll_thrust  + _rp_motmix*pitch_thrust) / thrust_out_actuator;  
+    float roll_thrust_scaled  = (roll_thrust  + _rp_motmix*pitch_thrust) / thrust_out_actuator;  // 1/thrust_out_actuator is in range [1;2]
     float pitch_thrust_scaled = (pitch_thrust + _rp_motmix*roll_thrust)  / thrust_out_actuator;
 
     if (fabsf(roll_thrust_scaled) > 1.0f) {
