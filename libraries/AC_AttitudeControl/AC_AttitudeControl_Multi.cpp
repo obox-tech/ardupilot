@@ -380,7 +380,7 @@ void AC_AttitudeControl_Multi::rate_controller_run()
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
 
     _motors.set_roll(get_rate_roll_pid().update_all(_ang_vel_body.x, gyro_latest.x,  _dt, _motors.limit.roll, _pd_scale.x) + _actuator_sysid.x);
-    _motors.set_roll_ff(get_rate_roll_pid().get_ff() -_rat_gyro_P*gyro_latest.y);
+    _motors.set_roll_ff(get_rate_roll_pid().get_ff() - _rat_gyro_P*gyro_latest.y);
 
     _motors.set_pitch(get_rate_pitch_pid().update_all(_ang_vel_body.y, gyro_latest.y,  _dt, _motors.limit.pitch, _pd_scale.y) + _actuator_sysid.y);
     _motors.set_pitch_ff(get_rate_pitch_pid().get_ff() + _rat_gyro_P*gyro_latest.x);
