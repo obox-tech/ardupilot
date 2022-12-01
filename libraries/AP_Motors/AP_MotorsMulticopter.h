@@ -26,7 +26,7 @@
 #define AP_MOTORS_SAFE_TIME_DEFAULT     1.0f    // Time for the esc when transitioning between zero pwm to minimum
 
 #define AP_MOTORS_ROTOR_RATIO_DEFAULT   0.97f   // Throttle output ratio (lower/upper) for coaxial frame
-
+#define AP_MOTORS_YAW_FACTOR_DEFAULT    0.5f
 // spool definition
 #define AP_MOTORS_SPOOL_UP_TIME_DEFAULT 0.5f    // time (in seconds) for throttle to increase from zero to min throttle, and min throttle to full throttle.
 
@@ -181,6 +181,7 @@ protected:
     AP_Int8             _disarm_disable_pwm;    // disable PWM output while disarmed
 
     AP_Float            _rotor_ratio;           // 
+    AP_Float            _rotor_yaw_factor;
     AP_Float            _rp_motmix;
 
     // Maximum lean angle of yaw servo in degrees. This is specific to tricopter
