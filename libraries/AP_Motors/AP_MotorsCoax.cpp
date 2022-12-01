@@ -195,8 +195,8 @@ void AP_MotorsCoax::output_armed_stabilizing()
 
     // scale the thrust to match steady state rotor speed ratio  = w_upper (CCW) / w_lower (CW) = 0.9
     // thrust_upper / thrust_lower = (w_upper / w_lower)^2 = 0.9^2 = 0.81
-    _thrust_yt_ccw = thrust_out + 0.5f * yaw_thrust;
-    _thrust_yt_cw  = _rotor_ratio * thrust_out - 0.5f * yaw_thrust;
+    _thrust_yt_ccw = thrust_out                 + _rotor_yaw_factor * yaw_thrust;
+    _thrust_yt_cw  = _rotor_ratio * thrust_out  - _rotor_yaw_factor * yaw_thrust;
 
     // limit thrust out for calculation of actuator gains
     float thrust_out_actuator = constrain_float(MAX(_throttle_hover * 0.5f, thrust_out), 0.5f, 1.0f);

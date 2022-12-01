@@ -217,6 +217,15 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("ROTOR_RATIO", 43, AP_MotorsMulticopter, _rotor_ratio, AP_MOTORS_ROTOR_RATIO_DEFAULT),
 
+    // @Param: YAW_FACTOR
+    // @DisplayName: Throttle output ratio (lower/upper) for coaxial frame
+    // @Description: Throttle output ratio (lower/upper) for coaxial frame
+    // @Range: -1 1
+    // @Units: 
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("YAW_FACTOR", 44, AP_MotorsMulticopter, _rotor_yaw_factor, AP_MOTORS_YAW_FACTOR_DEFAULT),
+
     // @Param: RP_MOTMIX
     // @DisplayName: Roll/Pitch cross coupling in output/motor mixer
     // @Description: Roll/Pitch cross coupling in output/motor mixer
@@ -224,7 +233,7 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @Units: 
     // @Increment: 0.001
     // @User: Advanced
-    AP_GROUPINFO("RP_MOTMIX", 44, AP_MotorsMulticopter, _rp_motmix, 0),
+    AP_GROUPINFO("RP_MOTMIX", 45, AP_MotorsMulticopter, _rp_motmix, 0),
 
     AP_GROUPEND
 };
