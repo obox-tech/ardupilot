@@ -37,6 +37,9 @@
 #ifndef AC_ATC_MULTI_RATE_YAW_FILT_HZ
  # define AC_ATC_MULTI_RATE_YAW_FILT_HZ     2.5f
 #endif
+#ifndef AC_ATTITUDE_CONTROL_RAT_GYRO_P
+ #define AC_ATTITUDE_CONTROL_RAT_GYRO_P     0.0f 
+#endif
 
 
 class AC_AttitudeControl_Multi : public AC_AttitudeControl {
@@ -97,4 +100,6 @@ protected:
     AP_Float              _thr_mix_man;     // throttle vs attitude control prioritisation used when using manual throttle (higher values mean we prioritise attitude control over throttle)
     AP_Float              _thr_mix_min;     // throttle vs attitude control prioritisation used when landing (higher values mean we prioritise attitude control over throttle)
     AP_Float              _thr_mix_max;     // throttle vs attitude control prioritisation used during active flight (higher values mean we prioritise attitude control over throttle)
+
+    AP_Float              _rat_gyro_P;    // gyroscopic precession compensation gain
 };
