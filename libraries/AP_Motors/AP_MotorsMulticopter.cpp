@@ -217,8 +217,8 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     AP_GROUPINFO("ROTOR_RATIO", 43, AP_MotorsMulticopter, _rotor_ratio, AP_MOTORS_ROTOR_RATIO_DEFAULT),
 
     // @Param: YAW_FACTOR
-    // @DisplayName: Throttle output ratio (lower/upper) for coaxial frame
-    // @Description: Throttle output ratio (lower/upper) for coaxial frame
+    // @DisplayName: Yaw Output mixing
+    // @Description: out_upper = YAW_FACTOR * yaw_thrust; out_lower = - YAW_FACTOR * yaw_thrust
     // @Range: -1 1
     // @Units: 
     // @Increment: 0.001
