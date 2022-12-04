@@ -232,6 +232,14 @@ const AP_Param::GroupInfo AC_AttitudeControl_Multi::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("THR_MIX_MAN", 6, AC_AttitudeControl_Multi, _thr_mix_man, AC_ATTITUDE_CONTROL_MAN_DEFAULT),
 
+    // @Param: RAT_GYRO_P
+    // @DisplayName: Gyro Comp gain
+    // @Description: Angular Velocity Cross Coupling
+    // @Range: -1 1
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("RAT_GYRO_P", 7, AC_AttitudeControl_Multi, _rat_gyro_P, AC_ATTITUDE_CONTROL_RAT_GYRO_P),
+
     AP_GROUPEND
 };
 
