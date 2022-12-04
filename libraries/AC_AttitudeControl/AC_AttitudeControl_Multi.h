@@ -37,7 +37,6 @@
 #ifndef AC_ATC_MULTI_RATE_YAW_FILT_HZ
  # define AC_ATC_MULTI_RATE_YAW_FILT_HZ     2.5f
 #endif
-// gyroscopic /cross coupling) gain
 #ifndef AC_ATTITUDE_CONTROL_RAT_GYRO_P
  #define AC_ATTITUDE_CONTROL_RAT_GYRO_P     0.0f 
 #endif
