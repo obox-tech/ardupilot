@@ -167,11 +167,13 @@ void AP_MotorsCoax::output_armed_stabilizing()
         }
     }
 
+    //TODO this needs fixing!
+    /*
     actuator_allowed = 2.0f * (1.0f - rp_scale * rp_thrust_max);
     if (fabsf(yaw_thrust) > actuator_allowed) {
         yaw_thrust = constrain_float(yaw_thrust, -actuator_allowed, actuator_allowed);
         limit.yaw = true;
-    }
+    } */
 
     // calculate the minimum thrust that doesn't limit the roll, pitch and yaw forces
     thrust_min_rpy = MAX(fabsf(rp_scale * rp_thrust_max), fabsf(yaw_thrust));

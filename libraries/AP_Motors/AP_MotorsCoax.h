@@ -71,6 +71,6 @@ protected:
     virtual void _output_test_seq(uint8_t motor_seq, int16_t pwm) override;
 
     // roll/pitch factor, TODO set using user defined parameter
-    AP_Float        _roll_factor; 
-    AP_Float        _pitch_factor;
+    float        _roll_factor; 
+    float        _pitch_factor;
 };
