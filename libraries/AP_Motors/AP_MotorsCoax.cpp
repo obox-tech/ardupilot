@@ -156,6 +156,9 @@ void AP_MotorsCoax::output_armed_stabilizing()
 
     float rp_thrust_max = MAX(fabsf(roll_thrust), fabsf(pitch_thrust));
 
+    
+    //TODO this needs fixing / proper implementation !
+    /*
     // calculate how much roll and pitch must be scaled to leave enough range for the minimum yaw
     if (is_zero(rp_thrust_max)) {
         rp_scale = 1.0f;
@@ -167,8 +170,6 @@ void AP_MotorsCoax::output_armed_stabilizing()
         }
     }
 
-    //TODO this needs fixing!
-    /*
     actuator_allowed = 2.0f * (1.0f - rp_scale * rp_thrust_max);
     if (fabsf(yaw_thrust) > actuator_allowed) {
         yaw_thrust = constrain_float(yaw_thrust, -actuator_allowed, actuator_allowed);
@@ -214,8 +215,8 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // the angle of attack multiplied by the static thrust.
     // Mixing is due to gyroscopic precession effect. _rp_motmix usually << 1.
     // TODO scale cross coupling gain using difference in rotor throttle (~ yaw controller output)
-    float roll_thrust_scaled  = (roll_thrust  + _rp_motmix*pitch_thrust) / thrust_out_actuator;  // 1/thrust_out_actuator is in range [1;2]
-    float pitch_thrust_scaled = (pitch_thrust + _rp_motmix*roll_thrust)  / thrust_out_actuator;
+    float roll_thrust_scaled  = (roll_thrust  + _rp_motmix * pitch_thrust) / thrust_out_actuator;  // 1/thrust_out_actuator is in range [1;2]
+    float pitch_thrust_scaled = (pitch_thrust + _rp_motmix * roll_thrust)  / thrust_out_actuator;
 
     if (fabsf(roll_thrust_scaled) > 1.0f) {
         limit.roll = true;
