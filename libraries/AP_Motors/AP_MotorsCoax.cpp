@@ -218,24 +218,21 @@ void AP_MotorsCoax::output_armed_stabilizing()
     float roll_thrust_scaled  = (roll_thrust  + _rp_motmix * pitch_thrust) / thrust_out_actuator;  // 1/thrust_out_actuator is in range [1;2]
     float pitch_thrust_scaled = (pitch_thrust + _rp_motmix * roll_thrust)  / thrust_out_actuator;
 
+    // mix for the used tilting head set-up
+    float servo_left    = -_roll_factor*roll_thrust_scaled - _pitch_factor*pitch_thrust_scaled;
+    float servo_right   = -_roll_factor*roll_thrust_scaled + _pitch_factor*pitch_thrust_scaled;
+
+    // do output limiting here: servo commands have to be in [-1,1]
+
+
+
     if (fabsf(roll_thrust_scaled) > 1.0f) {
-        limit.roll = true;
         roll_thrust_scaled = constrain_float(roll_thrust_scaled, -1.0f, 1.0f);
     }
     if (fabsf(pitch_thrust_scaled) > 1.0f) {
-        limit.pitch = true;
         pitch_thrust_scaled = constrain_float(pitch_thrust_scaled, -1.0f, 1.0f);
     }
 
-    // mix for the used tilting head set-up
-    float servo_left = -_pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
-    float servo_right = _pitch_factor*pitch_thrust_scaled -_roll_factor*roll_thrust_scaled;
-
-    // TODO: limit output, idea:
-    // if total servo_output <= 1: do not limit either roll or pitch because the weighted sum still fits in servo_l/r
-    // if total servo output > 1:
-    //      check what input dof can be limited most easily s.t. servo_left/right is again < 1
-    //      watch out when limiting roll/pitch to 1 from large non-zero output
 
     _actuator_out[0] =  servo_left;
     _actuator_out[1] =  servo_right;
