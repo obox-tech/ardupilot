@@ -72,7 +72,7 @@ void AP_MotorsCoax::output_to_motors()
             float rll_out;
             float pit_out;
 
-            // the cross coupling is here to show the effects when vehicle on ground
+            // the cross coupling is here to show the mixing effects when vehicle on ground
             rll_out = _roll_radio_passthrough  + _rp_motmix * _pitch_radio_passthrough;
             pit_out = _pitch_radio_passthrough + _rp_motmix * _roll_radio_passthrough;
             rc_write_angle(AP_MOTORS_MOT_1, (-_pitch_factor * pit_out - _roll_factor * rll_out) * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
@@ -219,23 +219,96 @@ void AP_MotorsCoax::output_armed_stabilizing()
     float pitch_thrust_scaled = (pitch_thrust + _rp_motmix * roll_thrust)  / thrust_out_actuator;
 
     // mix for the used tilting head set-up
-    float servo_left    = -_roll_factor*roll_thrust_scaled - _pitch_factor*pitch_thrust_scaled;
-    float servo_right   = -_roll_factor*roll_thrust_scaled + _pitch_factor*pitch_thrust_scaled;
+    float linact_left;
+    float linact_right;
 
-    // do output limiting here: servo commands have to be in [-1,1]
+    linact_left  = _roll_factor * roll_thrust_scaled + _pitch_factor * pitch_thrust_scaled;
 
+    // limit linear actuator commands to [-1 1]
+    if (linact_left > 1.0f){
+        if ((roll_thrust_scaled > 1.0f) && (pitch_thrust_scaled > 1.0f)){
+            roll_thrust_scaled = 1.0f;
+            pitch_thrust_scaled = 1.0f;
+            limit.roll = true;
+            limit.pitch = true;
+        }
+        else if ((roll_thrust_scaled > 1.0f) && (pitch_thrust_scaled < 1.0f)) {
+            roll_thrust_scaled = (1.0f - _pitch_factor*pitch_thrust_scaled)/_roll_factor; 
+            limit.roll = true;
+        }
+        else if ((roll_thrust_scaled < 1.0f) && (pitch_thrust_scaled > 1.0f)) {
+            pitch_thrust_scaled = (1.0f - _roll_factor*roll_thrust_scaled)/_pitch_factor;
+            limit.pitch = true;
+        }
+    }
+    else if (linact_left < -1.0f) {
+        if ((roll_thrust_scaled < -1.0f) && (pitch_thrust_scaled < -1.0f)) {
+            roll_thrust_scaled = -1.0f;
+            pitch_thrust_scaled = -1.0f;
+            limit.roll = true;
+            limit.pitch = true;
+        }
+        else if ((roll_thrust_scaled < -1.0f) && (pitch_thrust_scaled > -1.0f)) {
+            roll_thrust_scaled = (-1.0f - _pitch_factor*pitch_thrust_scaled)/_roll_factor;
+            limit.roll = true;
+        }
+        else if ((roll_thrust_scaled > -1.0f) && (pitch_thrust_scaled < -1.0f)) {
+            pitch_thrust_scaled = (-1.0f - _roll_factor*roll_thrust_scaled)/_pitch_factor;
+            limit.pitch = true;
+        }
+    }       
+    
+    // also check if right actuator is constrained
+    linact_right = -_roll_factor * roll_thrust_scaled + _pitch_factor * pitch_thrust_scaled;
+    
+    if (linact_right > 1.0f) {
+        if (roll_thrust_scaled < -1.0f && pitch_thrust_scaled > 1.0f){
+            roll_thrust_scaled = -1.0f;
+            pitch_thrust_scaled = 1.0f;
+            limit.roll = true;
+            limit.pitch = true;
+        }
+        else if ((roll_thrust_scaled < -1.0f) && (pitch_thrust_scaled < 1.0f)) {
+            roll_thrust_scaled = -(1.0f - _pitch_factor*pitch_thrust_scaled)/_roll_factor;
+            limit.roll = true;
+        }
+        else if ((roll_thrust_scaled > -1.0f) && (pitch_thrust_scaled > 1.0f)) {
+            pitch_thrust_scaled = (1.0f + _roll_factor*roll_thrust_scaled)/_pitch_factor;
+            limit.pitch = true;
+        }
+    }
+    else if (linact_right < -1.0f) {
+        if ((roll_thrust_scaled > 1.0f) && (pitch_thrust_scaled < -1.0f)) {
+            roll_thrust_scaled = 1.0f;
+            pitch_thrust_scaled = -1.0f;
+            limit.roll = true;
+            limit.pitch = true;
+        }
+        else if ((roll_thrust_scaled > 1.0f) && (pitch_thrust_scaled > -1.0f)) {
+            roll_thrust_scaled = -(-1.0f - _pitch_factor*pitch_thrust_scaled)/_roll_factor;
+            limit.roll = true;
+        }
+        else if ((roll_thrust_scaled < 1.0f) && (pitch_thrust_scaled < -1.0f)) {
+            pitch_thrust_scaled = (-1.0f + _roll_factor*roll_thrust_scaled)/_pitch_factor;
+            limit.pitch = true;
+        }
+    }
 
+    // recompute the actuators with constrained roll/pitch values
+    linact_left  =  _roll_factor * roll_thrust_scaled + _pitch_factor * pitch_thrust_scaled;
+    linact_right = -_roll_factor * roll_thrust_scaled + _pitch_factor * pitch_thrust_scaled;
 
-    if (fabsf(roll_thrust_scaled) > 1.0f) {
-        roll_thrust_scaled = constrain_float(roll_thrust_scaled, -1.0f, 1.0f);
+    // final scaling just in case something went wrong
+    if (fabsf(linact_left) > 1.0f) {
+        linact_left = constrain_float(linact_left, -1.0f, 1.0f);
     }
     if (fabsf(pitch_thrust_scaled) > 1.0f) {
-        pitch_thrust_scaled = constrain_float(pitch_thrust_scaled, -1.0f, 1.0f);
+        linact_right = constrain_float(linact_right, -1.0f, 1.0f);
     }
 
-
-    _actuator_out[0] =  servo_left;
-    _actuator_out[1] =  servo_right;
+    // map linear actuator to servo 
+    _actuator_out[0] =  -linact_left; // extension of linear actuator corresponds to lowering of servo arm
+    _actuator_out[1] =  linact_right;
 
     _actuator_out[2] = 0.0f;
     _actuator_out[3] = 0.0f;
