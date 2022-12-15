@@ -308,7 +308,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
 
     // map linear actuator to servo 
     _actuator_out[0] =  -linact_left; // extension of linear actuator corresponds to lowering of servo arm
-    _actuator_out[1] =  linact_right;
+    _actuator_out[1] =  -linact_right;
 
     _actuator_out[2] = 0.0f;
     _actuator_out[3] = 0.0f;
