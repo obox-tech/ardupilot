@@ -201,7 +201,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     _thrust_yt_cw  = _rotor_ratio * (thrust_out  - _rotor_yaw_factor * yaw_thrust);
 
     // limit thrust out for calculation of actuator gains
-    float thrust_out_actuator = constrain_float(MAX(_throttle_hover * 0.5f, thrust_out), 0.5f, 1.0f);
+    float thrust_out_actuator = constrain_float(MAX(_throttle_hover * 0.5f, thrust_out), 0.55f, 1.0f);
     // for low thrust levels this defaults to 0.5 so additional output scaling by 1/0.5 = 2 is applied.
     // therefore controller limiting starts when the total PID output is larger than 0.5!
 
