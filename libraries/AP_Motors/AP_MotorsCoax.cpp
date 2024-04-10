@@ -302,7 +302,7 @@ void AP_MotorsCoax::output_armed_stabilizing()
     if (fabsf(linact_left) > 1.0f) {
         linact_left = constrain_float(linact_left, -1.0f, 1.0f);
     }
-    if (fabsf(pitch_thrust_scaled) > 1.0f) {
+    if (fabsf(linact_right) > 1.0f) { 
         linact_right = constrain_float(linact_right, -1.0f, 1.0f);
     }
 
