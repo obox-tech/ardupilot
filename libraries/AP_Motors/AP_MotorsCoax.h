@@ -10,6 +10,10 @@
 #define AP_MOTORS_COAX_POSITIVE      1
 #define AP_MOTORS_COAX_NEGATIVE     -1
 
+// inverse roll and pitch lever arms used in actuator mixing
+#define AP_MOTORS_COAX_ROLL_FACTOR      0.433f  // motor mixing roll factor  130/300
+#define AP_MOTORS_COAX_PITCH_FACTOR     0.567f  // motor mixing pitch factor 170/300
+
 #define NUM_ACTUATORS 4
 
 #define AP_MOTORS_SINGLE_SPEED_DIGITAL_SERVOS 250 // update rate for digital servos
@@ -47,9 +51,11 @@ public:
     bool arming_checks(size_t buflen, char *buffer) const override { return AP_Motors::arming_checks(buflen, buffer); }
 
 protected:
+    void                mix_actuators(float roll_cmd, float pitch_cmd, float& linact_left, float& linact_right, AP_Motors::AP_Motors_limit& ctrl_limits);
+
     // output - sends commands to the motors
     void                output_armed_stabilizing() override;
-
+  
     float               _actuator_out[NUM_ACTUATORS]; // combined roll, pitch, yaw and throttle outputs to motors in 0~1 range
     float               _thrust_yt_ccw;
     float               _thrust_yt_cw;

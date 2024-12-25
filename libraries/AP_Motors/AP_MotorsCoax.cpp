@@ -15,6 +15,7 @@
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Math/AP_Math.h>
+#include "AP_Motors_Class.h"
 #include "AP_MotorsCoax.h"
 #include <GCS_MAVLink/GCS.h>
 #include <SRV_Channel/SRV_Channel.h>
@@ -66,11 +67,14 @@ void AP_MotorsCoax::output_to_motors()
 {
     switch (_spool_state) {
         case SpoolState::SHUT_DOWN:
+            // call the mixing and saturation function to test on ground
+            float linact_left, linact_right;
+            mix_actuators(_roll_radio_passthrough, _pitch_radio_passthrough, linact_left, linact_right, limit);
+
+            rc_write_angle(AP_MOTORS_MOT_1, -linact_left * AP_MOTORS_COAX_SERVO_INPUT_RANGE); // invert sign as extension of linear actuator corresponds to lowering of servo arm
+            rc_write_angle(AP_MOTORS_MOT_2, linact_right * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            
             // sends minimum values out to the motors
-            rc_write_angle(AP_MOTORS_MOT_1, _roll_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_2, _pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_3, -_roll_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
-            rc_write_angle(AP_MOTORS_MOT_4, -_pitch_radio_passthrough * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
             rc_write(AP_MOTORS_MOT_5, output_to_pwm(0));
             rc_write(AP_MOTORS_MOT_6, output_to_pwm(0));
             break;
@@ -112,6 +116,94 @@ uint32_t AP_MotorsCoax::get_motor_mask()
     mask |= AP_MotorsMulticopter::get_motor_mask();
 
     return mask;
+}
+
+// mix actuators 
+void AP_MotorsCoax::mix_actuators(float roll_cmd, float pitch_cmd, float& linact_left, float& linact_right, AP_Motors::AP_Motors_limit& ctrl_limits) {
+
+    linact_left  = AP_MOTORS_COAX_ROLL_FACTOR * roll_cmd + AP_MOTORS_COAX_PITCH_FACTOR * pitch_cmd;
+
+    // limit linear actuator commands to [-1 1]
+    if (linact_left > 1.0f){
+        if ((roll_cmd > 1.0f) && (pitch_cmd > 1.0f)){
+            roll_cmd = 1.0f;
+            pitch_cmd = 1.0f;
+            ctrl_limits.roll = true;
+            ctrl_limits.pitch = true;
+        }
+        else if ((roll_cmd > 1.0f) && (pitch_cmd < 1.0f)) {
+            roll_cmd = (1.0f - AP_MOTORS_COAX_PITCH_FACTOR*pitch_cmd)/AP_MOTORS_COAX_ROLL_FACTOR; 
+            ctrl_limits.roll = true;
+        }
+        else if ((roll_cmd < 1.0f) && (pitch_cmd > 1.0f)) {
+            pitch_cmd = (1.0f - AP_MOTORS_COAX_ROLL_FACTOR*roll_cmd)/AP_MOTORS_COAX_PITCH_FACTOR;
+            ctrl_limits.pitch = true;
+        }
+    }
+    else if (linact_left < -1.0f) {
+        if ((roll_cmd < -1.0f) && (pitch_cmd < -1.0f)) {
+            roll_cmd = -1.0f;
+            pitch_cmd = -1.0f;
+            ctrl_limits.roll = true;
+            ctrl_limits.pitch = true;
+        }
+        else if ((roll_cmd < -1.0f) && (pitch_cmd > -1.0f)) {
+            roll_cmd = (-1.0f - AP_MOTORS_COAX_PITCH_FACTOR*pitch_cmd)/AP_MOTORS_COAX_ROLL_FACTOR;
+            ctrl_limits.roll = true;
+        }
+        else if ((roll_cmd > -1.0f) && (pitch_cmd < -1.0f)) {
+            pitch_cmd = (-1.0f - AP_MOTORS_COAX_ROLL_FACTOR*roll_cmd)/AP_MOTORS_COAX_PITCH_FACTOR;
+            ctrl_limits.pitch = true;
+        }
+    }       
+
+    // recompute and saturate desired right actuator command based on saturated left actuator 
+    linact_right = -AP_MOTORS_COAX_ROLL_FACTOR * roll_cmd + AP_MOTORS_COAX_PITCH_FACTOR * pitch_cmd;
+
+    if (linact_right > 1.0f) {
+        if (roll_cmd < -1.0f && pitch_cmd > 1.0f){
+            roll_cmd = -1.0f;
+            pitch_cmd = 1.0f;
+            ctrl_limits.roll = true;
+            ctrl_limits.pitch = true;
+        }
+        else if ((roll_cmd < -1.0f) && (pitch_cmd < 1.0f)) {
+            roll_cmd = -(1.0f - AP_MOTORS_COAX_PITCH_FACTOR*pitch_cmd)/AP_MOTORS_COAX_ROLL_FACTOR;
+            ctrl_limits.roll = true;
+        }
+        else if ((roll_cmd > -1.0f) && (pitch_cmd > 1.0f)) {
+            pitch_cmd = (1.0f + AP_MOTORS_COAX_ROLL_FACTOR*roll_cmd)/AP_MOTORS_COAX_PITCH_FACTOR;
+            ctrl_limits.pitch = true;
+        }
+    }
+    else if (linact_right < -1.0f) {
+        if ((roll_cmd > 1.0f) && (pitch_cmd < -1.0f)) {
+            roll_cmd = 1.0f;
+            pitch_cmd = -1.0f;
+            ctrl_limits.roll = true;
+            ctrl_limits.pitch = true;
+        }
+        else if ((roll_cmd > 1.0f) && (pitch_cmd > -1.0f)) {
+            roll_cmd = -(-1.0f - AP_MOTORS_COAX_PITCH_FACTOR*pitch_cmd)/AP_MOTORS_COAX_ROLL_FACTOR;
+            ctrl_limits.roll = true;
+        }
+        else if ((roll_cmd < 1.0f) && (pitch_cmd < -1.0f)) {
+            pitch_cmd = (-1.0f + AP_MOTORS_COAX_ROLL_FACTOR*roll_cmd)/AP_MOTORS_COAX_PITCH_FACTOR;
+            ctrl_limits.pitch = true;
+        }
+    }
+
+    // recompute the actuators with constrained roll/pitch values
+    linact_left  =  AP_MOTORS_COAX_ROLL_FACTOR * roll_cmd + AP_MOTORS_COAX_PITCH_FACTOR * pitch_cmd;
+    linact_right = -AP_MOTORS_COAX_ROLL_FACTOR * roll_cmd + AP_MOTORS_COAX_PITCH_FACTOR * pitch_cmd;
+
+    // final limiting in case something went wrong in the saturation logic above
+    if (fabsf(linact_left) > 1.0f) {
+        linact_left = constrain_float(linact_left, -1.0f, 1.0f);
+    }
+    if (fabsf(linact_right) > 1.0f) {
+        linact_right = constrain_float(linact_right, -1.0f, 1.0f);
+    }
 }
 
 // sends commands to the motors
@@ -197,22 +289,23 @@ void AP_MotorsCoax::output_armed_stabilizing()
         limit.roll = true;
         limit.pitch = true;
     }
+
     // force of a lifting surface is approximately equal to the angle of attack times the airflow velocity squared
     // static thrust is proportional to the airflow velocity squared
     // therefore the torque of the roll and pitch actuators should be approximately proportional to
     // the angle of attack multiplied by the static thrust.
-    _actuator_out[0] = roll_thrust / thrust_out_actuator;
-    _actuator_out[1] = pitch_thrust / thrust_out_actuator;
-    if (fabsf(_actuator_out[0]) > 1.0f) {
-        limit.roll = true;
-        _actuator_out[0] = constrain_float(_actuator_out[0], -1.0f, 1.0f);
-    }
-    if (fabsf(_actuator_out[1]) > 1.0f) {
-        limit.pitch = true;
-        _actuator_out[1] = constrain_float(_actuator_out[1], -1.0f, 1.0f);
-    }
-    _actuator_out[2] = -_actuator_out[0];
-    _actuator_out[3] = -_actuator_out[1];
+    float roll_cmd = roll_thrust / thrust_out_actuator;
+    float pitch_cmd = pitch_thrust / thrust_out_actuator;
+
+    // call the mixing and saturation function
+    float linact_left, linact_right;
+    mix_actuators(roll_cmd, pitch_cmd, linact_left, linact_right, limit);
+
+    // map linear actuators to servo outputs 
+    _actuator_out[0] =  -linact_left; // invert sign as extension of linear actuator corresponds to lowering of servo arm
+    _actuator_out[1] =  linact_right;
+    _actuator_out[2] = 0.0f; // unused
+    _actuator_out[3] = 0.0f; // unused
 }
 
 // output_test_seq - spin a motor at the pwm value specified
