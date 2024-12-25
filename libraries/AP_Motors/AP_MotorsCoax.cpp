@@ -73,6 +73,9 @@ void AP_MotorsCoax::output_to_motors()
 
             rc_write_angle(AP_MOTORS_MOT_1, -linact_left * AP_MOTORS_COAX_SERVO_INPUT_RANGE); // invert sign as extension of linear actuator corresponds to lowering of servo arm
             rc_write_angle(AP_MOTORS_MOT_2, linact_right * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            // copy for multi flap / servo setup
+            rc_write_angle(AP_MOTORS_MOT_3, -linact_left * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
+            rc_write_angle(AP_MOTORS_MOT_4, linact_right * AP_MOTORS_COAX_SERVO_INPUT_RANGE);
             
             // sends minimum values out to the motors
             rc_write(AP_MOTORS_MOT_5, output_to_pwm(0));
@@ -294,8 +297,8 @@ void AP_MotorsCoax::output_armed_stabilizing()
     // map linear actuators to servo outputs 
     _actuator_out[0] =  -linact_left; // invert sign as extension of linear actuator corresponds to lowering of servo arm
     _actuator_out[1] =  linact_right;
-    _actuator_out[2] = 0.0f; // unused
-    _actuator_out[3] = 0.0f; // unused
+    _actuator_out[2] =  -linact_left; // copy for multi flap / servo set-up
+    _actuator_out[3] =  linact_right; 
 }
 
 // output_test_seq - spin a motor at the pwm value specified
