@@ -54,7 +54,7 @@ protected:
     float               _thrust_yt_ccw;
     float               _thrust_yt_cw;
 
-    const char* _get_frame_string() const override { return "COAX"; }
+    const char* _get_frame_string() const override { return "CoaXV2"; }
 
     // output_test_seq - spin a motor at the pwm value specified
     //  motor_seq is the motor's sequence number from 1 to the number of motors on the frame
