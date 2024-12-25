@@ -242,17 +242,6 @@ void AP_MotorsCoax::output_armed_stabilizing()
 
     float rp_thrust_max = MAX(fabsf(roll_thrust), fabsf(pitch_thrust));
 
-    // calculate how much roll and pitch must be scaled to leave enough range for the minimum yaw
-    if (is_zero(rp_thrust_max)) {
-        rp_scale = 1.0f;
-    } else {
-        rp_scale = constrain_float((1.0f - MIN(fabsf(yaw_thrust), 0.5f * (float)_yaw_headroom * 0.001f)) / rp_thrust_max, 0.0f, 1.0f);
-        if (rp_scale < 1.0f) {
-            limit.roll = true;
-            limit.pitch = true;
-        }
-    }
-
     actuator_allowed = 2.0f * (1.0f - rp_scale * rp_thrust_max);
     if (fabsf(yaw_thrust) > actuator_allowed) {
         yaw_thrust = constrain_float(yaw_thrust, -actuator_allowed, actuator_allowed);
@@ -278,9 +267,10 @@ void AP_MotorsCoax::output_armed_stabilizing()
         yaw_thrust = constrain_float(yaw_thrust, -thrust_out, thrust_out);
         limit.yaw = true;
     }
-
-    _thrust_yt_ccw = thrust_out + 0.5f * yaw_thrust;
-    _thrust_yt_cw = thrust_out - 0.5f * yaw_thrust;
+    
+    // scale the thrust to match steady state rotor rpm/throttle ratio   
+    _thrust_yt_ccw =                 thrust_out  + _rotor_yaw_factor * yaw_thrust;
+    _thrust_yt_cw  = _rotor_ratio * (thrust_out  - _rotor_yaw_factor * yaw_thrust);
 
     // limit thrust out for calculation of actuator gains
     float thrust_out_actuator = constrain_float(MAX(_throttle_hover * 0.5f, thrust_out), 0.5f, 1.0f);

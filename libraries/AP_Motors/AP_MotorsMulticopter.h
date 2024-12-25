@@ -20,6 +20,8 @@
 #define AP_MOTORS_BAT_CURR_TC_DEFAULT   5.0f    // Time constant used to limit the maximum current
 #define AP_MOTORS_SLEW_TIME_DEFAULT     0.0f    // slew rate limit for thrust output
 #define AP_MOTORS_SAFE_TIME_DEFAULT     1.0f    // Time for the esc when transitioning between zero pwm to minimum
+#define AP_MOTORS_ROTOR_RATIO_DEFAULT   0.97f   // Throttle output ratio (lower/upper) for coaxial frame
+#define AP_MOTORS_YAW_FACTOR_DEFAULT    0.5f    // Yaw motor mixer constant
 
 // spool definition
 #define AP_MOTORS_SPOOL_UP_TIME_DEFAULT 0.5f    // time (in seconds) for throttle to increase from zero to min throttle, and min throttle to full throttle.
@@ -168,6 +170,10 @@ protected:
     AP_Float            _throttle_hover;        // estimated throttle required to hover throttle in the range 0 ~ 1
     AP_Int8             _throttle_hover_learn;  // enable/disabled hover thrust learning
     AP_Int8             _disarm_disable_pwm;    // disable PWM output while disarmed
+
+    // Coax frame specific parameters
+    AP_Float            _rotor_ratio;           
+    AP_Float            _rotor_yaw_factor;
 
     // Maximum lean angle of yaw servo in degrees. This is specific to tricopter
     AP_Float            _yaw_servo_angle_max_deg;

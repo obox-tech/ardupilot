@@ -231,6 +231,24 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("SPOOL_TIM_DN", 44, AP_MotorsMulticopter, _spool_down_time, 0),
 
+        // @Param: ROTOR_RATIO
+    // @DisplayName: Throttle output ratio (lower/upper) for coaxial frame
+    // @Description: Throttle output ratio (lower/upper) for coaxial frame
+    // @Range: 0 1
+    // @Units: 
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("ROTOR_RATIO", 45, AP_MotorsMulticopter, _rotor_ratio, AP_MOTORS_ROTOR_RATIO_DEFAULT),
+
+    // @Param: YAW_FACTOR
+    // @DisplayName: Yaw Output mixing
+    // @Description: out_upper = YAW_FACTOR * yaw_thrust; out_lower = - YAW_FACTOR * yaw_thrust
+    // @Range: -1 1
+    // @Units: 
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("YAW_FACTOR", 46, AP_MotorsMulticopter, _rotor_yaw_factor, AP_MOTORS_YAW_FACTOR_DEFAULT),
+
     AP_GROUPEND
 };
 
